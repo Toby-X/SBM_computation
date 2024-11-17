@@ -28,7 +28,7 @@ model {
   Pi ~ dirichlet(alpha);
   for (i in 1:K){
     for (j in 1:i){
-      B_lower[i,j] ~ beta(a,b)
+      B_lower[i,j] ~ beta(a,b);
     }
   }
 }
