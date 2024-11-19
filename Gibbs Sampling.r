@@ -29,5 +29,6 @@ A <- A + t(A)
 k <- 3                                      # Number of clusters
 
 fit <- fit_sbm(A, k)
+fit$P
 print(fit$z)
 
