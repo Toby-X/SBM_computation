@@ -1,4 +1,7 @@
-Official R implementation of the paper: 
+SBM_Computation
+============
+
+Official R and Stan implementation of the paper: 
 
 **"Some cool name"**
 
