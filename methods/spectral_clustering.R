@@ -1,8 +1,14 @@
 if (!require(RSpectra)) {
   install.packages("RSpectra")
 }
+if (!require(ClusterR)) {
+  install.packages("ClusterR")
+}
+
 
 library(RSpectra)
+library(ClusterR)
+
 
 # Index Vector 2 0-1 matrix
 vec2mat <- function(x){
@@ -21,9 +27,8 @@ mat2vec <- function(Z){
 # Spectral Estimation Algorithms
 spectral_clustering <- function(A, K){
   svd_A <- RSpectra::svds(A, K)
-  kmeans_res <- kmeans(svd_A$u, K, iter.max = 100, 
-                       nstart = 10, algorithm = "Lloyd")
-  clust_vec <- kmeans_res$cluster
+  kmeans_res <- KMeans_rcpp(svd_A$u, K, num_init = 10, max_iter = 100)
+  clust_vec <- kmeans_res$clusters
   Z <- vec2mat(clust_vec)
   # calculate the B matrix
   B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)

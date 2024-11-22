@@ -7,10 +7,14 @@ if (!require(RSpectra)) {
 if (!require(e1071)) {
   install.packages("e1071")
 }
+if (!require(ClusterR)) {
+  install.packages("ClusterR")
+})
 
 library(gtools)
 library(RSpectra)
 library(e1071)
+library(ClusterR)
 
 # Index Vector 2 0-1 matrix
 vec2mat <- function(x){
@@ -115,9 +119,8 @@ spectral_simplex_l2 <- function(A, K){
   S <- svm_cone(svd_A$u)
   
   Z_mixed <- svd_A$u%*%solve(svd_A$u[S,])
-  kmeans_res <- kmeans(Z_mixed, K, iter.max = 100,
-                       nstart = 10, algorithm = "Lloyd")
-  clust_vec <- kmeans_res$cluster
+  kmeans_res <- KMeans_rcpp(Z_mixed, K, num_init = 10, max_iter = 100)
+  clust_vec <- kmeans_res$clusters
   Z <- vec2mat(clust_vec)
   B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
   B <- t(B_half) %*% (svd_A$d * B_half)
