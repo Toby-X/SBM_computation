@@ -1,3 +1,9 @@
+if (!require("clue")){
+  install.packages("clue")
+}
+
+library(clue)
+
 # Data generation function here
 sbm_gen_diagdom <- function(N, K, beta, b, seed){
   set.seed(seed)

@@ -4,6 +4,10 @@ if (!require(MLmetrics)) install.packages("MLmetrics")
 library(MLmetrics)
 library(aricode)
 
+ERROR <- function(y_true, y_pred){
+  sum(y_true != y_pred)/length(y_true)
+}
+
 # Usage
 # ARI(y_true, y_pred)
 # NMI(y_true, y_pred)
