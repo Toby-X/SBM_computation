@@ -15,6 +15,7 @@ sbm_gen_diagdom <- function(N, K, beta, b, seed){
   ## change the diagonal element of B to 3*rho/2
   B <- B + diag(rho, K)
   Z <- t(rmultinom(N, 1, alpha))
+  Z[1:K,] <- diag(1, K)
   EA <- Z%*%B%*%t(Z)
   A_lower <- rbinom(N*(N+1)/2, 1,EA[lower.tri(EA, diag = TRUE)])
   A <- matrix(0, N, N)
