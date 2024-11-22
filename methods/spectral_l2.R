@@ -1,7 +1,16 @@
+if (!require(gtools)) {
+  install.packages("gtools")
+}
+if (!require(RSpectra)) {
+  install.packages("RSpectra")
+}
+if (!require(e1071)) {
+  install.packages("e1071")
+}
+
 library(gtools)
 library(RSpectra)
 library(e1071)
-library(clue)
 
 # Index Vector 2 0-1 matrix
 vec2mat <- function(x){
@@ -24,36 +33,6 @@ mat2vec <- function(Z){
     sn = sn+1
   }
   return(sn)
-}
-
-SCORE <- function(U){
-  K = ncol(U)
-  P = NA
-  ## pseudo-pruning
-  if (any(U[,1]<=1e-7)){
-    P = which(U[,1]<=1e-7)
-    U0 = U[-P,]
-    Us = U0/U0[,1]
-  } else {
-    Us = U/U[,1]
-  }
-  
-  IK = diag(rep(1,K))
-  S = c()
-  Y0 = Us
-  Y = Y0
-  for (k in 1:K) {
-    l = apply(Y,1,norm,"2")
-    S = c(S,which.max(l))
-    u = Y[S[k],]/norm(Y[S[k],],"2")
-    u = data.matrix(u)
-    Y = Y%*%(IK-u%*%t(u))
-  }
-  
-  if (!any(is.na(P))){
-    S = sapply(S,.find_act,P)
-  }
-  return(S)
 }
 
 # L2 normalization
@@ -127,67 +106,6 @@ svm_cone <- function(U, beta=0, max.it=50, eps=1e-12, cond_tre=150){
   return(pure_idx)
 }
 
-# Spectral Estimation Algorithms
-spectral_clustering <- function(A, K){
-  svd_A <- RSpectra::svds(A, K)
-  kmeans_res <- kmeans(svd_A$u, K, iter.max = 100, 
-                       nstart = 10, algorithm = "Lloyd")
-  clust_vec <- kmeans_res$cluster
-  Z <- vec2mat(clust_vec)
-  # calculate the B matrix
-  B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
-  B <- t(B_half) %*% (svd_A$d * B_half)
-  list(Z = Z, B = B)
-}
-
-spectral_simplex_null <- function(A, K){
-  N <- nrow(A)
-  
-  svd_A <- RSpectra::svds(A, K)
-  if (all(svd_A$u[,1]<=1e-14)){
-    svd_A$u = -svd_A$u
-    svd_A$v = -svd_A$v
-  }
-  U <- svd_A$u
-  IK <- diag(rep(1,K))
-  S <- c()
-  for (k in 1:K) {
-    l <- apply(U,1,norm,"2")
-    S <- c(S,which.max(l))
-    u <- U[S[k],]/norm(U[S[k],],"2")
-    u <- data.matrix(u)
-    U <- U%*%(IK-u%*%t(u))
-  }
-  Z_mixed <- svd_A$u%*%solve(svd_A$u[S,])
-  kmeans_res <- kmeans(Z_mixed, K, iter.max = 100,
-                       nstart = 10, algorithm = "Lloyd")
-  clust_vec <- kmeans_res$cluster
-  Z <- vec2mat(clust_vec)
-  B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
-  B <- t(B_half) %*% (svd_A$d * B_half)
-  
-  list(Z = Z, B = B)
-}
-
-spectral_simplex_score <- function(A, K){
-  svd_A <- RSpectra::svds(A, K)
-  if (all(svd_A$u[,1]<=1e-14)){
-    svd_A$u = -svd_A$u
-    svd_A$v = -svd_A$v
-  }
-  S <- SCORE(svd_A$u)
-  
-  Z_mixed <- svd_A$u%*%solve(svd_A$u[S,])
-  kmeans_res <- kmeans(Z_mixed, K, iter.max = 100,
-                       nstart = 10, algorithm = "Lloyd")
-  clust_vec <- kmeans_res$cluster
-  Z <- vec2mat(clust_vec)
-  B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
-  B <- t(B_half) %*% (svd_A$d * B_half)
-  
-  list(Z = Z, B = B)
-}
-
 spectral_simplex_l2 <- function(A, K){
   svd_A <- RSpectra::svds(A, K)
   if (all(svd_A$u[,1]<=1e-14)){
@@ -205,11 +123,4 @@ spectral_simplex_l2 <- function(A, K){
   B <- t(B_half) %*% (svd_A$d * B_half)
   
   list(Z = Z, B = B)
-}
-
-# Hungarian Algorithm to find the corresponding index
-find_best_idx <- function(EX,X){
-  loss.mad <- t(apply(X, 2, function(x) colMeans(abs(x - EX))))
-  od <- clue::solve_LSAP(loss.mad)
-  od
 }
