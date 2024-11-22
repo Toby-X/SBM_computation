@@ -70,7 +70,7 @@ m <- 100
 
 sc <- foreach(i=1:m,.combine=rbind,
                    .packages = c("RSpectra","gtools","tictoc","clue",
-                                 "MLmetrics","aricode")) %dopar% {
+                                 "MLmetrics","aricode","ClusterR")) %dopar% {
   N_list <- c(250, 500, 1000, 2000)
   b_list <- c(0.1, 0.5, 1)
   K_list <- c(5, 10, 20)
