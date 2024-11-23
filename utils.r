@@ -33,8 +33,8 @@ find_best_idx <- function(EX,X){
 }
 
 # Index Vector 2 0-1 matrix
-vec2mat <- function(x){
-  K <- max(x)
+vec2mat <- function(x, K){
+  # K <- max(x)
   N <- length(x)
   Z <- matrix(0, nrow = N, ncol = K)
   Z[cbind(1:N, x)] <- 1

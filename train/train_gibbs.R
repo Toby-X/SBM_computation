@@ -34,7 +34,7 @@ train_gibbs <- function(N, K, beta, b, seed){
   time <- time$toc - time$tic
   Z_hat <- res$z
   B_hat <- res$P
-  Z_hat <- vec2mat(Z_hat)
+  Z_hat <- vec2mat(Z_hat, K)
   
   # find the best permutation
   idx <- find_best_idx(Z, Z_hat)

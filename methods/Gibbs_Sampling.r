@@ -3,7 +3,15 @@ if (!require(gtools)) {
   install.packages("gtools")
 }
 if (!require(mlsbm)) {
-  install.packages("mlsbm")
+  if (!require(devtools))
+  {
+    install.packages("devtools")
+  }
+  if (!require("BiocManager", quietly = TRUE)){
+    install.packages("BiocManager")
+    BiocManager::install("bluster")
+  }
+  devtools::install_github("carter-allen/mlsbm")
 }
 # Load required package
 library(gtools)  # For Dirichlet distribution

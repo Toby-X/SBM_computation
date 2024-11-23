@@ -38,7 +38,7 @@ train_vb <- function(N, K, beta, b, seed){
   ###### To motivate the following steps, Z_hat should be a matrix; if cluster vector, call vec2mat to become a matrix
   Z_hat <- res$z
   B_hat <- res$P
-  Z_hat <- vec2mat(Z_hat)
+  Z_hat <- vec2mat(Z_hat, K)
   
   # find the best permutation
   idx <- find_best_idx(Z, Z_hat)
