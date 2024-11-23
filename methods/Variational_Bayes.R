@@ -85,29 +85,28 @@ variational_sbm <- function(A, k, z_init, M, epsilon, beta, D) {
 
 # Example usage:
 # Set the parameters for the algorithm
-set.seed(53)
-# true model
-B <- matrix(c(1, 0.8, 0.25, 0.8, 1, 0, 0.25, 0, 0), nrow = 3)
-# generate data of Z, where the true community is 1112223333, z is 10*3 matrix
-z <- c(rep(1, 30), rep(2, 30), rep(3, 40))
-# sample an A based on B and z
-A <- matrix(0, nrow = 100, ncol = 100)
-for (i in 1:100) {
-  for (j in i:100) {
-    if (i != j) {
-      A[i, j] <- rbinom(1, 1, B[z[i], z[j]])
-    }
-  }
-}
-A <- A + t(A)
+# set.seed(53)
+# # true model
+# B <- matrix(c(1, 0.8, 0.25, 0.8, 1, 0, 0.25, 0, 0), nrow = 3)
+# # generate data of Z, where the true community is 1112223333, z is 10*3 matrix
+# z <- c(rep(1, 30), rep(2, 30), rep(3, 40))
+# # sample an A based on B and z
+# A <- matrix(0, nrow = 100, ncol = 100)
+# for (i in 1:100) {
+#   for (j in i:100) {
+#     if (i != j) {
+#       A[i, j] <- rbinom(1, 1, B[z[i], z[j]])
+#     }
+#   }
+# }
+# A <- A + t(A)
 
-k <- 3                                      # Number of clusters
-z_init <- sample(1:k, 100, replace = TRUE)   # Initial labels
-# z_init <- z
-M <- 10000                                    # Maximum iterations
-epsilon <- 1e-6                            # Tolerance level
-beta <- 5                                   # Prior parameter
-D <- 1                                      # Prior factor
+# k <- 3                                      # Number of clusters
+# z_init <- sample(1:k, 100, replace = TRUE)   # Initial labels
+# M <- 10000                                    # Maximum iterations
+# epsilon <- 1e-6                            # Tolerance level
+# beta <- 5                                   # Prior parameter
+# D <- 1                                      # Prior factor
 
-result <- variational_sbm(A, k, z_init, M, epsilon, beta, D)
-print(result)
+# result <- variational_sbm(A, k, z_init, M, epsilon, beta, D)
+# print(result)

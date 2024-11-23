@@ -29,7 +29,8 @@ train_gibbs <- function(N, K, beta, b, seed){
   
   # spectral clustering
   tic()
-  res <- fit_sbm(A, K)
+  res <- fit_sbm(A, K, verbose = FALSE)
+  # cat('Fitted for N =', N, 'K =', K, 'beta =', beta, 'b =', b, 'seed =', seed)
   time <- toc()
   time <- time$toc - time$tic
   Z_hat <- res$z

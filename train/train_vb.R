@@ -20,8 +20,6 @@ source("./utils.r")
 source("./methods/Variational_Bayes.R")
 source("./metrics.r")
 
-## not started !!!!
-
 train_vb <- function(N, K, beta, b, seed){
   # generate data
   data <- sbm_gen_diagdom(N, K, beta, b, seed)
@@ -32,12 +30,18 @@ train_vb <- function(N, K, beta, b, seed){
   # spectral clustering
   tic()
   ###### this line should fit the model
-  res <- fit_sbm(A, K)
+  z_init <- sample(1:K, N, replace = TRUE)   # Initial labels
+  M <- 10000                                    # Maximum iterations
+  epsilon <- 1e-6                            # Tolerance level
+  betaparam <- 5                                   # Prior parameter
+  D <- 1                                      # Prior factor
+  res <- variational_sbm(A, K, z_init, M, epsilon, betaparam, D)
+  cat('Fitted for N =', N, 'K =', K, 'beta =', beta, 'b =', b, 'seed =', seed)
   time <- toc()
   time <- time$toc - time$tic
   ###### To motivate the following steps, Z_hat should be a matrix; if cluster vector, call vec2mat to become a matrix
-  Z_hat <- res$z
-  B_hat <- res$P
+  Z_hat <- res$z_hat
+  B_hat <- res$mu_hat
   Z_hat <- vec2mat(Z_hat, K)
   
   # find the best permutation
