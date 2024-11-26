@@ -11,15 +11,27 @@ if(!require(doSNOW)){
 if(!require(tictoc)){
   install.packages("tictoc")
 }
+if(!require(blockmodels)){
+  install.packages("blockmodels")
+}
 
 library(doSNOW)
 library(tictoc)
-library(sbm)
+library(blockmodels)
 
 # wd set as the directory above
 source("./utils.r")
 source("./methods/Gibbs_Sampling.R")
 source("./metrics.r")
+
+vec2mat <- function(vec,K){
+  N <- length(vec)
+  
+  mat <- matrix(0, nrow = N, ncol = K)
+  mat[cbind(1:N,vec)] <- 1
+
+  mat
+}
 
 train_vem <- function(N, K, beta, b, seed){
   # generate data
@@ -28,17 +40,18 @@ train_vem <- function(N, K, beta, b, seed){
   Z <- data$Z
   B <- data$B
   
-  # spectral clustering
+  res <- blockmodels::BM_bernoulli("SBM_sym", A, verbosity = 0, plotting="",
+                                   exploration_factor=1, explore_min=K,
+                                   explore_max=K+1)
   tic()
-  res <- estimateSimpleSBM(A, model = "bernoulli",
-                               estimOptions = list(nbCores=1, plot=F,
-                                                   nbBlocksRange=c(K,K),
-                                                   exploreMin=K,
-                                                   exploreMax=K))
+  res$estimate()
   time <- toc()
   time <- time$toc - time$tic
-  Z_hat <- res$indMemberships
-  B_hat <- res$connectParam
+  
+  Z_hat <- res$memberships[[K]]$Z
+  B_hat <- res$model_parameters[[K]]$pi
+  Z_hat <- apply(Z_hat, 1, which.max)
+  Z_hat <- vec2mat(Z_hat, K)
   
   # find the best permutation
   idx <- find_best_idx(Z, Z_hat)
@@ -75,7 +88,7 @@ m <- 100
 
 res_vem <- foreach(i=1:m,.combine=rbind,
                      .packages = c("RSpectra","gtools","tictoc","clue",
-                                   "MLmetrics","aricode","mlsbm")) %dopar% {
+                                   "MLmetrics","aricode","blockmodels")) %dopar% {
                                      N_list <- c(250, 500, 1000, 2000)
                                      b_list <- c(0.1, 0.5, 1)
                                      K_list <- c(5, 10, 20)

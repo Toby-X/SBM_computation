@@ -68,7 +68,7 @@ opts <- list(progress=progress)
 
 m <- 100
 
-sscore <- foreach(i=1:m,.combine=rbind,
+sl2 <- foreach(i=1:m,.combine=rbind,
                   .packages = c("RSpectra","gtools","tictoc","clue",
                                 "MLmetrics","aricode","e1071","ClusterR")) %dopar% {
                                   N_list <- c(250, 500, 1000, 2000)
