@@ -9,7 +9,7 @@ if (!require(e1071)) {
 }
 if (!require(ClusterR)) {
   install.packages("ClusterR")
-})
+}
 
 library(gtools)
 library(RSpectra)
@@ -118,12 +118,25 @@ spectral_simplex_l2 <- function(A, K){
   }
   S <- svm_cone(svd_A$u)
   
-  Z_mixed <- svd_A$u%*%solve(svd_A$u[S,])
+  svd_K <- svd(svd_A$u[S,])
+  Us_inv <- svd_K$v %*% (svd_K$d^(-1) * t(svd_K$u))
+  
+  Z_mixed <- svd_A$u%*%Us_inv
   kmeans_res <- KMeans_rcpp(Z_mixed, K, num_init = 10, max_iter = 100)
   clust_vec <- kmeans_res$clusters
   Z <- vec2mat(clust_vec)
-  B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
-  B <- t(B_half) %*% (svd_A$d * B_half)
+  if (any(colSums(Z) == 0)){
+    idx_zero <- which(colSums(Z) == 0)
+    Z <- Z[, -idx_zero]
+    B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
+    B <- t(B_half) %*% (svd_A$d * B_half)
+    Z <- cbind(Z, matrix(0, nrow = nrow(Z), ncol = length(idx_zero)))
+    B <- cbind(B, matrix(0, nrow = nrow(B), ncol = length(idx_zero)))
+    B <- rbind(B, matrix(0, nrow = length(idx_zero), ncol = ncol(B)))
+  } else {
+    B_half <- solve(t(Z) %*% Z, t(Z) %*% svd_A$u)
+    B <- t(B_half) %*% (svd_A$d * B_half)
+  }
   
   list(Z = Z, B = B)
 }

@@ -18,7 +18,7 @@ library(sbm)
 
 # wd set as the directory above
 source("./utils.r")
-source("./methods/Variational_EM.R")
+source("./methods/Gibbs_Sampling.R")
 source("./metrics.r")
 
 train_vem <- function(N, K, beta, b, seed){
