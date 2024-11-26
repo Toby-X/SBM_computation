@@ -5,6 +5,8 @@
 # beta: power parameter for imbalance (heterogeneity) of the community sizes 0, 5, 10
 # M: parameter of the connection probability temporaly no
 
+# Please use train_vem_g/b
+
 if(!require(doSNOW)){
   install.packages("doSNOW")
 }
