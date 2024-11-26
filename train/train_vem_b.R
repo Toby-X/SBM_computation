@@ -17,10 +17,10 @@ library(tictoc)
 
 # wd set as the directory above
 source("./utils.r")
-source("./methods/Gibbs_Sampling.R")
+source("./methods/Variational_EM.R")
 source("./metrics.r")
 
-train_gibbs <- function(N, K, beta, b, seed){
+train_vem <- function(N, K, beta, b, seed){
   # generate data
   data <- sbm_gen_diagdom(N, K, beta, b, seed)
   A <- data$A
@@ -29,12 +29,12 @@ train_gibbs <- function(N, K, beta, b, seed){
   
   # spectral clustering
   tic()
-  res <- fit_sbm(A, K, verbose = FALSE)
+  res <- blockmodels:::BM_bernoulli("SBM", A, explore_min=K-1, explore_max=K)
+  try(res$estimate())
   time <- toc()
   time <- time$toc - time$tic
-  Z_hat <- res$z
-  B_hat <- res$P
-  Z_hat <- vec2mat(Z_hat, K)
+  Z_hat <- t(apply(res$memberships[[K]]$Z, 1, function(x) as.integer(x == max(x))))
+  B_hat <- res$model_parameters[[K]]$pi
   
   # find the best permutation
   idx <- find_best_idx(Z, Z_hat)
@@ -59,7 +59,7 @@ train_gibbs <- function(N, K, beta, b, seed){
        N = N, K = K, beta = beta, b = b, seed = seed)
 }
 
-numCores <- 6L
+numCores <- 24L
 cl <- makeCluster(numCores)
 registerDoSNOW(cl)
 
@@ -69,24 +69,24 @@ opts <- list(progress=progress)
 
 m <- 100
 
-res_gibbs <- foreach(i=1:m,.combine=rbind,
-                  .packages = c("RSpectra","gtools","tictoc","clue",
-                                "MLmetrics","aricode","mlsbm")) %dopar% {
-                                  N_list <- c(2000)
-                                  b_list <- c(0.1, 0.5, 1)
-                                  K_list <- c(5, 10, 20)
-                                  beta_list <- c(0, 5, 10)
-                                  res <- list()
-                                  for (N in N_list) {
-                                    for (b in b_list) {
-                                      for (K in K_list) {
-                                        for (beta in beta_list) {
-                                          res <- rbind(res, train_gibbs(N, K, beta, b, i))
-                                        }
-                                      }
-                                    }
-                                  }
-                                  res
-                                }
+res_vem <- foreach(i=1:m,.combine=rbind,
+                     .packages = c("RSpectra","gtools","tictoc","clue",
+                                   "MLmetrics","aricode","mlsbm")) %dopar% {
+                                     N_list <- c(250, 500, 1000, 2000)
+                                     b_list <- c(0.1, 0.5, 1)
+                                     K_list <- c(5, 10, 20)
+                                     beta_list <- c(0, 5, 10)
+                                     res <- list()
+                                     for (N in N_list) {
+                                       for (b in b_list) {
+                                         for (K in K_list) {
+                                           for (beta in beta_list) {
+                                             res <- rbind(res, train_vem(N, K, beta, b, i))
+                                           }
+                                         }
+                                       }
+                                     }
+                                     res
+                                   }
 
-save.image("sbm_gibbs_2000.RData")
+save.image("sbm_vemb.RData")

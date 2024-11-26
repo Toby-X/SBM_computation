@@ -18,7 +18,7 @@ library(sbm)
 
 # wd set as the directory above
 source("./utils.r")
-source("./methods/Gibbs_Sampling.R")
+source("./methods/Variational_EM.R")
 source("./metrics.r")
 
 train_vem <- function(N, K, beta, b, seed){
@@ -30,15 +30,11 @@ train_vem <- function(N, K, beta, b, seed){
   
   # spectral clustering
   tic()
-  res <- estimateSimpleSBM(A, model = "bernoulli",
-                               estimOptions = list(nbCores=1, plot=F,
-                                                   nbBlocksRange=c(K,K),
-                                                   exploreMin=K,
-                                                   exploreMax=K))
+  res <- BM_bernoulli("SBM", A, explore_min=K-1, explore_max=K)
   time <- toc()
   time <- time$toc - time$tic
-  Z_hat <- res$indMemberships
-  B_hat <- res$connectParam
+  Z_hat <- round(res$memberships[[K]]$Z)
+  B_hat <- res$model_parameters[[K]]$pi
   
   # find the best permutation
   idx <- find_best_idx(Z, Z_hat)

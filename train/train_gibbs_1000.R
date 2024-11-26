@@ -54,18 +54,20 @@ train_gibbs <- function(N, K, beta, b, seed){
   B_MAE <- MAE(B_lower, B_hat_lower)
   B_MSE <- MSE(B_lower, B_hat_lower)
   
-  list(result = res, Z_ARI = Z_ARI, Z_NMI = Z_NMI, Z_F1_Score = Z_F1_Score,
+  list(Z_ARI = Z_ARI, Z_NMI = Z_NMI, Z_F1_Score = Z_F1_Score,
        Z_Accuracy = Z_Accuracy, B_MAE = B_MAE, B_MSE = B_MSE, time = time,
        N = N, K = K, beta = beta, b = b, seed = seed)
 }
 
-numCores <- 12L
+numCores <- 6L
 cl <- makeCluster(numCores)
 registerDoSNOW(cl)
 
 pb <- txtProgressBar(max = 100, style = 3)
 progress <- function(n) setTxtProgressBar(pb,n)
 opts <- list(progress=progress)
+
+m <- 100
 
 res_gibbs <- foreach(i=1:m,.combine=rbind,
                   .packages = c("RSpectra","gtools","tictoc","clue",

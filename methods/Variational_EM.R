@@ -1,19 +1,21 @@
 ## method for Variational EM
-if(!require(sbm)){
-  install.packages("sbm")
+if (!require(blockmodels)) {
+  devtools::install_github("keanson/blockmodels")
 }
+library(blockmodels)
+# devtools::install_github("keanson/blockmodels")
 
-library(sbm)
 
-## Example
-## A is the adjacency matrix
-## Est
-# sbm_fit <- estimateSimpleSBM(A, model = "bernoulli",
-#                              estimOptions = list(nbCores=1, plot=F, 
-#                                                  nbBlocksRange=c(K,K),
-#                                                  exploreMin=K,
-#                                                  exploreMax=K))
-# # Z matrix
-# sbm_fit$indMemberships
-# # B connectivity
-# sbm_fit$connectParam
+# generation of one SBM network
+# npc <- 30 # nodes per class
+# Q <- 10 # classes
+# n <- npc * Q # nodes
+# Z<-diag(Q)%x%matrix(1,npc,1)
+# P<-matrix(runif(Q*Q),Q,Q)
+# M<-1*(matrix(runif(n*n),n,n)<Z%*%P%*%t(Z)) ## adjacency matrix
+# ## estimation
+# my_model <- BM_bernoulli("SBM",M, explore_min=1, explore_max=2)
+# my_model <- BM_bernoulli("SBM",M, explore_min=Q-1, explore_max=Q)
+# my_model$estimate()
+# my_model$memberships[[10]]$Z
+
