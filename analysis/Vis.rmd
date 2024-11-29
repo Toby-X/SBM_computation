@@ -205,3 +205,56 @@ ggplot(res_sum_NMI, aes(x = as.numeric(as.character(N)), y = med,
   scale_x_log10() + 
   ylab("NMI")
 ```
+
+## Attempt 4
+
+Flipped
+
+```{r}
+create_plot <- function(data, metric_to_plot, row_var, col_vars, parameters) {  
+  library(ggplot2)
+  library(dplyr)
+  
+  # Filter the data for the desired parameters
+  data_filtered <- data %>%
+    filter(N %in% parameters$N, K %in% parameters$K, 
+           beta %in% parameters$beta, b %in% parameters$b)
+  
+  # Check if data_filtered is empty
+  if (nrow(data_filtered) == 0) {
+    stop("No matching data found for the given parameters.")
+  }
+  
+  # Select and rename the metric to plot
+  data_long <- data_filtered %>%
+    select(N, K, beta, b, method, !!sym(metric_to_plot)) %>%
+    rename(metric_value = !!sym(metric_to_plot))
+  
+  # Plot
+  p <- ggplot(data_long, aes(x = metric_value, y = as.factor(N), color = method)) +
+    geom_boxplot(
+      position = position_dodge(width = 0.8),
+      outlier.shape = "*", width = 0.6
+    ) +
+    scale_color_brewer(palette = "Set2") +  # Use a nice color palette
+    labs(
+      x = substr(metric_to_plot, 3, str_length(metric_to_plot)), 
+      y = "N", 
+      color = "Method"
+    ) +
+    theme_minimal(base_size = 14) +  # A clean, minimal theme
+    theme(
+      text = element_text(family = "Roboto"),
+      legend.position = "top",
+      legend.title = element_text(size = 12),
+      legend.text = element_text(size = 10),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 12),
+      strip.text = element_text(size = 12)
+    ) +
+    facet_grid(rows = vars(!!sym(row_var)), cols = vars(!!!syms(col_vars)), labeller = label_both) +
+    coord_flip()
+  
+  return(p)
+}
+```
