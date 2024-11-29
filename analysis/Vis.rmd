@@ -1,0 +1,207 @@
+```{r}
+library(tidyverse)
+
+library(tidyverse)
+
+# load data
+load("./data/sbm_sc.RData")
+load("./data/sbm_sl2.RData")
+load("./data/sbm_ss.RData")
+load("./data/sbm_sscore.RData")
+load("./data/sbm_vb.RData")
+load("./data/sbm_vemb.RData")
+res_vemb_dm <- data.frame(res_vem)
+res_vemb_df <- data.frame(data.matrix(res_vemb_dm))
+load("./data/sbm_vemg.RData")
+res_vemg_dm <- data.frame(res_vem)
+res_vemg_df <- data.frame(data.matrix(res_vemg_dm))
+
+# transform data into data frame
+res_sc_dm <- data.frame(sc)
+res_sc_df <- data.frame(data.matrix(res_sc_dm))
+res_ss_dm <- data.frame(ss)
+res_ss_df <- data.frame(data.matrix(res_ss_dm))
+res_sl2_dm <- data.frame(sl2)
+res_sl2_df <- data.frame(data.matrix(res_sl2_dm))
+res_sscore_dm <- data.frame(sscore)
+res_sscore_df <- data.frame(data.matrix(res_sscore_dm))
+res_vb_dm <- data.frame(res_vb)
+res_vb_df <- data.frame(data.matrix(res_vb_dm))
+
+res_full <- rbind(res_sc_df, res_ss_df, res_sl2_df, res_sscore_df, res_vb_df, res_vemb_df, res_vemg_df)
+res_full$method <- rep(c("SC", "Simplex", "L2", "SCORE", "VB", "VEMB", "VEMG"),
+                       each = nrow(res_sc_df))
+res_full$N <- as.factor(res_full$N)
+res_full$K <- as.factor(res_full$K)
+res_full$beta <- as.factor(res_full$beta)
+res_full$b <- as.factor(res_full$b)
+
+## summary statistics
+res_sum_ARI <- res_full %>% group_by(N,K,beta,b,method) %>% 
+  summarize(med = median(Z_ARI), mad = mad(Z_ARI))
+res_sum_NMI <- res_full %>% group_by(N,K,beta,b,method) %>% 
+  summarize(med = median(Z_NMI), mad = mad(Z_NMI))
+## seem to have some issues
+res_sum_ACC <- res_full %>% group_by(N,K,beta,b,method) %>% 
+  summarize(med = median(1-Z_Accuracy), mad = mad(1-Z_Accuracy))
+res_sum_time <- res_full %>% group_by(N,K,beta,b,method) %>% 
+  summarize(med = median(time), mad = mad(time))
+```
+
+## Attempt 1:
+
+Horizontal, grouped metrics
+
+```{r}
+# Function to create the plot
+create_plot <- function(data, parameters, ro, co) {
+  # Filter data for the parameters of interest
+  data_filtered <- data %>%
+    filter(N %in% parameters$N, K %in% parameters$K, b %in% parameters$b, beta %in% parameters$beta)
+  
+  # Transform data to long format for plotting
+  data_long <- data_filtered %>%
+    pivot_longer(cols = c(Z_ARI, Z_NMI, Z_Accuracy), 
+                 names_to = "metric", 
+                 values_to = "value") %>%
+    mutate(value = ifelse(metric == "Z_Accuracy", value, value))
+  
+  # Set factor levels for metrics for ordering
+  data_long$metric <- factor(data_long$metric, 
+                             levels = c("Z_Accuracy", "Z_NMI", "Z_ARI"),
+                             labels = c("Accuracy", "NMI", "ARI"))
+  
+  # Plot
+  p <- ggplot(data_long, aes(x = value, y = method, color = metric)) +
+    geom_boxplot(outlier.shape = NA, outlier.color = "black", width = 0.6, position=position_dodge(width = 0.8)) +  # Boxplots only
+    scale_color_manual(values = c("Accuracy" = "#61B2E6",  # Colors matching your example
+                                 "NMI" = "#E1A030", 
+                                 "ARI" = "#299C74")) +
+    labs(x = "Metric Value (-1 to 1)", y = "Method", fill = "Metric") +
+    theme_minimal(base_size = 12) +
+    theme(text = element_text(family = "roboto"),  # Use the custom font
+      legend.position = "top",
+      legend.title = element_text(size = 12, face = "bold"),
+      legend.text = element_text(size = 10),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 12, face = "bold"),
+      strip.text = element_text(size = 12, face = "bold"),
+      panel.grid.minor = element_blank()
+    ) +
+    facet_grid(rows = vars(!!sym((ro))), cols = vars(!!sym((co))), labeller = label_both)
+
+  return(p)
+}
+```
+
+```{r}
+# Define parameters to filter for
+# N: number of samples 250, 500, 1000, 2000
+# b: power for rho, i.e., the connection probability, 0.5, 1, 1.5
+# K: community number 5, 10, 20
+# beta: power parameter for imbalance (heterogeneity) of the community sizes 0, 5, 10
+parameters <- list(N = c(250, 500, 1000, 2000), K = c(5, 10, 20), b = c(1), beta = c(0))
+create_plot(res_full, parameters, "K", "N")
+
+# Save the plot to file
+# ggsave("custom_plot.png", plot = p, width = 12, height = 8)
+
+```
+
+## Attempt 2
+
+Horizontal, one metric
+
+```{r}
+create_plot <- function(data, metric_to_plot, row_var, col_vars, parameters) {  
+  library(ggplot2)
+  library(dplyr)
+  
+  # Filter the data for the desired parameters
+  data_filtered <- data %>%
+    filter(N %in% parameters$N, K %in% parameters$K, 
+           beta %in% parameters$beta, b %in% parameters$b)
+  
+  # Check if data_filtered is empty
+  if (nrow(data_filtered) == 0) {
+    stop("No matching data found for the given parameters.")
+  }
+  
+  # Select and rename the metric to plot
+  data_long <- data_filtered %>%
+    select(N, K, beta, b, method, !!sym(metric_to_plot)) %>%
+    rename(metric_value = !!sym(metric_to_plot))
+  
+  # Plot
+  p <- ggplot(data_long, aes(x = metric_value, y = as.factor(N), color = method)) +
+    geom_boxplot(
+      position = position_dodge(width = 0.8),
+      outlier.shape = "*", width = 0.6
+    ) +
+    scale_color_brewer(palette = "Set2") +  # Use a nice color palette
+    labs(
+      x = substr(metric_to_plot, 3, str_length(metric_to_plot)), 
+      y = "N", 
+      color = "Method"
+    ) +
+    theme_minimal(base_size = 14) +  # A clean, minimal theme
+    theme(
+      text = element_text(family = "Roboto"),
+      legend.position = "top",
+      legend.title = element_text(size = 12),
+      legend.text = element_text(size = 10),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 12),
+      strip.text = element_text(size = 12)
+    ) +
+    facet_grid(rows = vars(!!sym(row_var)), cols = vars(!!!syms(col_vars)), labeller = label_both)
+  
+  return(p)
+}
+
+```
+
+```{r}
+# Define parameters to filter for
+# N: number of samples 250, 500, 1000, 2000
+# b: power for rho, i.e., the connection probability, 0.1, 0.5, 1
+# K: community number 5, 10, 20
+# beta: power parameter for imbalance (heterogeneity) of the community sizes 0, 5, 10
+parameters <- list(N = c(250, 500, 1000, 2000), K = c(5, 10, 20), b = c(0.1, 0.5, 1), beta = c(0, 5, 10))
+create_plot(res_full, "Z_Accuracy", "K", c("beta", "b"), parameters)
+
+# Save the plot to file
+# ggsave("custom_plot.png", plot = p, width = 12, height = 8)
+
+```
+
+## Attempt 3
+
+vertical
+
+```{r}
+# Similar but this is better
+res_sum_NMI$K <- paste0("K = ",res_sum_NMI$K)
+res_sum_NMI$beta <- paste0("beta = ",res_sum_NMI$beta)
+res_sum_NMI$b <- paste0("b = ",res_sum_NMI$b)
+ggplot(res_sum_NMI, aes(x = as.numeric(as.character(N)), y = med,
+                        color = method)) + 
+  geom_line(lwd=0.75) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = med - mad, ymax = med + mad), width = 0.1) + 
+  facet_grid(K ~ beta + b) + 
+  ggtitle("NMI") +
+  # theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    plot.title = element_text(size = 16)
+  ) + 
+  xlab("N") + 
+  scale_x_log10() + 
+  ylab("NMI")
+```

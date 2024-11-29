@@ -17,14 +17,12 @@ if(!require(optparse)){
 library("optparse")
  
 option_list = list(
-  make_option(c("-s", "--seed"), type="integer", default=1, 
-              help="random seed ", metavar="integer"),
-  make_option(c("-l", "--length"), type="integer", default=4,
-              help="length of the seed", metavar="integer"),
-); 
+  make_option(c("-s", "--seed"), type="integer", default=1, help="random seed ", metavar="integer"),
+  make_option(c("-l", "--length"), type="integer", default=4, help="length of the seed", metavar="integer")
+)
 
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
+opt_parser = OptionParser(option_list=option_list)
+opt = parse_args(opt_parser)
 print(paste0("seed: ", opt$seed, " length: ", opt$length))
 
 library(doSNOW)
@@ -44,7 +42,7 @@ train_gibbs <- function(N, K, beta, b, seed){
   
   # spectral clustering
   tic()
-  res <- fit_sbm(A, K, verbose = FALSE)
+  res <- fit_sbm(A, K, verbose = FALSE, burn = 10, n_iter = 50)
   time <- toc()
   time <- time$toc - time$tic
   Z_hat <- res$z
@@ -85,7 +83,7 @@ opts <- list(progress=progress)
 res_gibbs <- foreach(i=opt$seed:opt$seed+opt$seed+opt$length,.combine=rbind,
                   .packages = c("RSpectra","gtools","tictoc","clue",
                                 "MLmetrics","aricode","mlsbm")) %dopar% {
-                                  N_list <- c(250, 500, 1000, 2000)
+                                  N_list <- c(2000)
                                   b_list <- c(0.1, 0.5, 1)
                                   K_list <- c(5, 10, 20)
                                   beta_list <- c(0, 5, 10)
@@ -102,4 +100,4 @@ res_gibbs <- foreach(i=opt$seed:opt$seed+opt$seed+opt$length,.combine=rbind,
                                   res
                                 }
 
-save.image(paste0("./sbm_gibbs_seed_", opt$seed, ".RData"))
+save.image(paste0("./50_sbm_gibbs_seed_", opt$seed, ".RData"))

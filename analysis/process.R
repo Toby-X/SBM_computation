@@ -82,3 +82,5 @@ ggplot(res_sum_NMI, aes(x = as.numeric(as.character(N)), y = med,
   xlab("N") + 
   scale_x_log10() + 
   ylab("NMI")
+
+

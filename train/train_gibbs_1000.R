@@ -59,7 +59,7 @@ train_gibbs <- function(N, K, beta, b, seed){
        N = N, K = K, beta = beta, b = b, seed = seed)
 }
 
-numCores <- 6L
+numCores <- 24L
 cl <- makeCluster(numCores)
 registerDoSNOW(cl)
 

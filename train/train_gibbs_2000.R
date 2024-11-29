@@ -59,7 +59,7 @@ train_gibbs <- function(N, K, beta, b, seed){
        N = N, K = K, beta = beta, b = b, seed = seed)
 }
 
-numCores <- 6L
+numCores <- 1L
 cl <- makeCluster(numCores)
 registerDoSNOW(cl)
 
@@ -67,7 +67,7 @@ pb <- txtProgressBar(max = 100, style = 3)
 progress <- function(n) setTxtProgressBar(pb,n)
 opts <- list(progress=progress)
 
-m <- 100
+m <- 1
 
 res_gibbs <- foreach(i=1:m,.combine=rbind,
                   .packages = c("RSpectra","gtools","tictoc","clue",

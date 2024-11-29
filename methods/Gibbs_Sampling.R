@@ -11,7 +11,7 @@ if (!require(mlsbm)) {
     install.packages("BiocManager")
     BiocManager::install("bluster")
   }
-  devtools::install_github("carter-allen/mlsbm")
+  devtools::install_github("keanson/mlsbm")
 }
 # Load required package
 library(gtools)  # For Dirichlet distribution
@@ -35,8 +35,8 @@ library(mlsbm)   # For SBM
 # }
 # A <- A + t(A)
 # k <- 3                                      # Number of clusters
-# 
+
 # fit <- fit_sbm(A, k)
-# fit$P
+# fit
 # print(fit$z)
 
