@@ -33,15 +33,6 @@ source("./utils.r")
 source("./methods/Gibbs_Sampling.R")
 source("./metrics.r")
 
-spectral_clustering <- function(A, K){
-  library(RSpectra)
-  library(ClusterR)
-  svd_A <- RSpectra::svds(A, K)
-  kmeans_res <- KMeans_rcpp(svd_A$u, K, num_init = 10, max_iter = 100)
-  clust_vec <- kmeans_res$clusters
-  Z <- clust_vec
-} 
-
 train_gibbs <- function(N, K, beta, b, seed){
   # generate data
   print(paste0("N: ", N, " K: ", K, " beta: ", beta, " b: ", b, " seed: ", seed))
@@ -51,9 +42,17 @@ train_gibbs <- function(N, K, beta, b, seed){
   B <- data$B
   
   # spectral clustering
+  spectral_clustering <- function(A, K){
+    library(RSpectra)
+    library(ClusterR)
+    svd_A <- RSpectra::svds(A, K)
+    kmeans_res <- KMeans_rcpp(svd_A$u, K, num_init = 10, max_iter = 100)
+    clust_vec <- kmeans_res$clusters
+    Z <- clust_vec
+  } 
   tic()
   zinit <- spectral_clustering(A, K)
-  res <- fit_sbm(A, K, verbose = FALSE, z_init = zinit, burn = 10, n_iter = 50)
+  res <- fit_sbm(A, K, verbose = FALSE, z_init = zinit, burn = 10, n_iter = 100)
   time <- toc()
   time <- time$toc - time$tic
   Z_hat <- res$z
@@ -83,32 +82,48 @@ train_gibbs <- function(N, K, beta, b, seed){
        N = N, K = K, beta = beta, b = b, seed = seed)
 }
 
-numCores <- 10L
-cl <- makeCluster(numCores, outfile=paste0("./sbm_gibbs_seed_", opt$seed, ".out"))
-registerDoSNOW(cl)
+# numCores <- 5L
+# cl <- makeCluster(numCores, outfile=paste0("./sbm_gibbs_seed_", opt$seed, ".out"))
+# registerDoSNOW(cl)
 
-pb <- txtProgressBar(max = 100, style = 3)
-progress <- function(n) setTxtProgressBar(pb,n)
-opts <- list(progress=progress)
+# pb <- txtProgressBar(max = 100, style = 3)
+# progress <- function(n) setTxtProgressBar(pb,n)
+# opts <- list(progress=progress)
 
-res_gibbs <- foreach(i=opt$seed:opt$seed+opt$length,.combine=rbind,
-                  .packages = c("RSpectra","gtools","tictoc","clue",
-                                "MLmetrics","aricode","mlsbm","ClusterR")) %dopar% {
-                                  N_list <- c(1000)
-                                  b_list <- c(0.1, 0.5, 1)
-                                  K_list <- c(5, 10, 20)
-                                  beta_list <- c(0, 5, 10)
-                                  res <- list()
-                                  for (N in N_list) {
-                                    for (b in b_list) {
-                                      for (K in K_list) {
-                                        for (beta in beta_list) {
-                                          res <- rbind(res, train_gibbs(N, K, beta, b, i))
-                                        }
-                                      }
-                                    }
-                                  }
-                                  res
-                                }
+# res_gibbs <- foreach(i=opt$seed:opt$seed+opt$length,.combine=rbind,
+#                   .packages = c("RSpectra","gtools","tictoc","clue",
+#                                 "MLmetrics","aricode","mlsbm")) %dopar% {
+#                                   N_list <- c(1000)
+#                                   b_list <- c(0.1, 0.5, 1)
+#                                   K_list <- c(5, 10, 20)
+#                                   beta_list <- c(0, 5, 10)
+#                                   res <- list()
+#                                   for (N in N_list) {
+#                                     for (b in b_list) {
+#                                       for (K in K_list) {
+#                                         for (beta in beta_list) {
+#                                           res <- rbind(res, train_gibbs(N, K, beta, b, i))
+#                                         }
+#                                       }
+#                                     }
+#                                   }
+#                                   res
+#                                 }
+res <- list()
+for (i in opt$seed:(opt$seed+opt$length)){
+  N_list <- c(2000)
+  b_list <- c(0.1, 0.5, 1)
+  K_list <- c(5, 10, 20)
+  beta_list <- c(0, 5, 10)
+  for (N in N_list) {
+    for (b in b_list) {
+      for (K in K_list) {
+        for (beta in beta_list) {
+          res <- rbind(res, train_gibbs(N, K, beta, b, i))
+        }
+      }
+    }
+  }
+}
 
 save.image(paste0("./sbm_gibbs_seed_", opt$seed, ".RData"))
