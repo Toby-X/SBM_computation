@@ -1,8 +1,5 @@
 ```{r}
 library(tidyverse)
-
-library(tidyverse)
-
 # load data
 load("./data/sbm_sc.RData")
 load("./data/sbm_sl2.RData")
@@ -138,6 +135,7 @@ create_plot <- function(data, metric_to_plot, row_var, col_vars, parameters) {
       position = position_dodge(width = 0.8),
       outlier.shape = "*", width = 0.6
     ) +
+    coord_cartesian(xlim = c(0, 0.1)) + 
     scale_color_brewer(palette = "Set2") +  # Use a nice color palette
     labs(
       x = substr(metric_to_plot, 3, str_length(metric_to_plot)), 
@@ -168,7 +166,7 @@ create_plot <- function(data, metric_to_plot, row_var, col_vars, parameters) {
 # K: community number 5, 10, 20
 # beta: power parameter for imbalance (heterogeneity) of the community sizes 0, 5, 10
 parameters <- list(N = c(250, 500, 1000, 2000), K = c(5, 10, 20), b = c(0.1, 0.5, 1), beta = c(0, 5, 10))
-create_plot(res_full, "Z_Accuracy", "K", c("beta", "b"), parameters)
+create_plot(res_full, "B_MSE", "K", c("beta", "b"), parameters)
 
 # Save the plot to file
 # ggsave("custom_plot.png", plot = p, width = 12, height = 8)
