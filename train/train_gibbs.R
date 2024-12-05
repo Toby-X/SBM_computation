@@ -11,19 +11,19 @@ if(!require(doSNOW)){
 if(!require(tictoc)){
   install.packages("tictoc")
 }
-if(!require(optparse)){
-  install.packages("optparse")
-}
-library("optparse")
+# if(!require(optparse)){
+#   install.packages("optparse")
+# }
+# library("optparse")
  
-option_list = list(
-  make_option(c("-s", "--seed"), type="integer", default=1, help="random seed ", metavar="integer"),
-  make_option(c("-l", "--length"), type="integer", default=4, help="length of the seed", metavar="integer")
-)
+# option_list = list(
+#   make_option(c("-s", "--seed"), type="integer", default=1, help="random seed ", metavar="integer"),
+#   make_option(c("-l", "--length"), type="integer", default=4, help="length of the seed", metavar="integer")
+# )
 
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
-print(paste0("seed: ", opt$seed, " length: ", opt$length))
+# opt_parser = OptionParser(option_list=option_list)
+# opt = parse_args(opt_parser)
+# print(paste0("seed: ", opt$seed, " length: ", opt$length))
 
 library(doSNOW)
 library(tictoc)
@@ -91,7 +91,9 @@ pb <- txtProgressBar(max = 100, style = 3)
 progress <- function(n) setTxtProgressBar(pb,n)
 opts <- list(progress=progress)
 
-res_gibbs <- foreach(i=opt$seed:opt$seed+opt$length,.combine=rbind,
+m <- 100
+
+res_gibbs <- foreach(i=1:m,.combine=rbind,
                   .packages = c("RSpectra","gtools","tictoc","clue",
                                 "MLmetrics","aricode","mlsbm","ClusterR")) %dopar% {
                                   N_list <- c(1000)
@@ -111,4 +113,4 @@ res_gibbs <- foreach(i=opt$seed:opt$seed+opt$length,.combine=rbind,
                                   res
                                 }
 
-save.image(paste0("./sbm_gibbs_seed_", opt$seed, ".RData"))
+save.image(paste0("./sbm_gibbs", opt$seed, ".RData"))
