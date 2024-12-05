@@ -1,6 +1,3 @@
-SBM_Computation
-============
-
 Official R and Stan implementation of the paper: 
 
 **"Beyond Asymptotics: Practical Insights into Community Detection in Complex Networks"**
